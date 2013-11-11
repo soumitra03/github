@@ -7,7 +7,7 @@ public class JpaBean {
 	
 	public String saveEntity(@Body String requestString){
 		if(requestString != null){
-			System.out.println("Lets see if this works");
+			System.out.println("Lets see if this w1orks");
 			
 		}
 		return requestString;
