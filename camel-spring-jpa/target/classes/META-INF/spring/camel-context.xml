@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Configures the Camel Context -->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camel="http://camel.apache.org/schema/spring"
+	xmlns:jms="http://www.springframework.org/schema/jms" xmlns:amq="http://activemq.apache.org/schema/core"
+	xsi:schemaLocation="
+          http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+          http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+
+
+	<bean id="activeMQFactory" class="org.apache.activemq.ActiveMQConnectionFactory"><!-- points to location of active 
+			mq broker -->
+		<property name="brokerURL" value="tcp://localhost:61616" />
+		<!-- vm://localhost means you should connect to an embedded broker named 
+			localhost running inside current jvm vm transport connector creates a broker 
+			if one does not exist for production scenarios you connect with a broker 
+			that is already running and use connection pooling -->
+	</bean>
+
+
+	<!-- in this case camel will look for beans of type ...Component and then 
+		add them to camel context automatically -->
+
+	<!-- jms providers are usually refererred to as brokers because they manage 
+		connection between consumer and producer -->
+	<!-- configure camel's jms component with a connectionfactory -->
+	<!-- Apache ActiveMQ is a popular JMS provider -->
+	<bean id="jms" class="org.apache.camel.component.jms.JmsComponent">
+		<property name="connectionFactory" ref="activeMQFactory" />
+	</bean>
+
+	<!-- Note that the JMS Template object needs to be aware of the connection 
+		factory reference through which it will contact the Message Broker for establishing 
+		connection and session. -->
+	<bean id="sampleJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+		<property name=" connectionFactory" ref="activeMQFactory" />
+	</bean>
+
+
+	<bean id="jpaBean" class="com.mycompany.JpaBean"></bean>
+	<!-- load a camel context in spring This will automatically start a springcamelcontext -->
+	<camel:camelContext xmlns="http://camel.apache.org/schema/spring">
+		<!-- now you need to tell camel what routes to use -->
+		<camel:route id="myFirstRoute">
+			<!-- from : consume message from WHERE -->
+			<!-- noop=true - leave file as it is - useful for testing -->
+			<!-- jms means using jms component | get it from a 'queue' named 'FromRequest' 
+				| default behavior is queue so u can remove it -->
+			<camel:from uri="jms:queue:FromRequest" />
+			<camel:to uri="jpaBean" />
+			<camel:to uri="jms:queue:ToRequest" />
+
+		</camel:route>
+	</camel:camelContext>
+
+</beans>
